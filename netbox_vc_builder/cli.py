@@ -10,7 +10,7 @@ from .config import ConfigError, load_config
 from .find_masters import find_masters
 from .find_members import find_members
 from .interface_ops import process_interfaces
-from .models import RunSummary, parse_stack_name
+from .models import RunSummary, VCResult, parse_stack_name
 from .netbox_client import NetBoxAuthError, NetBoxClient, NetBoxConnectionError
 from .reporter import Reporter
 
@@ -74,12 +74,25 @@ def main(
     summary = RunSummary(site_slug=config.site_slug)
     start = time.monotonic()
 
-    masters = find_masters(config.site_slug, client, config.manufacturer_slug, reporter, overwrite=config.overwrite)
+    masters = find_masters(config.site_slug, client, config.manufacturer_slug, reporter)
     summary.stacks_found = len(masters)
 
     reporter.section("Checking each master for members")
 
     for master in masters:
+        if master.existing_vc_id is not None and not config.overwrite:
+            reporter.warn(f"Skipping {master.name}: already a VC member, use --overwrite to recreate")
+            summary.skipped += 1
+            summary.results.append(
+                VCResult(
+                    master_name=master.name,
+                    member_count=0,
+                    status="skipped",
+                    message="already a VC member, use --overwrite to recreate",
+                )
+            )
+            continue
+
         members = find_members(master, config.site_slug, client, config.manufacturer_slug, reporter)
         accepted, rejected = check_members(members, reporter, overwrite=config.overwrite)
         result = build_vc(master, accepted, client, reporter, overwrite=config.overwrite)
@@ -89,8 +102,6 @@ def main(
             result.warnings.extend(iface_warnings)
             summary.created += 1
             summary.warnings.extend(iface_warnings)
-        elif result.status == "skipped":
-            summary.skipped += 1
         elif result.status == "failed":
             summary.failed += 1
         elif result.status == "dry_run":
@@ -121,6 +132,9 @@ def _final_check(
         if d["virtual_chassis"] is None and parse_stack_name(d["name"]) is not None
     ]
     if orphans:
+        reporter.newline()
+        reporter.newline()
+
         reporter.warn(f"Final check: {len(orphans)} device(s) still not in any VC:")
         for d in orphans:
-            reporter.warn(f"  - {d['name']}")
+            reporter.list(f"{d['name']}")

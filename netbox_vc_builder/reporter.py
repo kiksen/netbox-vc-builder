@@ -32,6 +32,14 @@ class Reporter:
         self._console.print(f"[green]✓[/green] {message}")
         self._log.info(message)
 
+    def newline(self):
+        self._console.print("")
+
+    def list(self, message: str):
+        self._console.print(f"\t - {message}")
+        self._log.warning(message)
+
+
     def warn(self, message: str) -> None:
         self._console.print(f"[yellow]⚠[/yellow] {message}")
         self._log.warning(message)

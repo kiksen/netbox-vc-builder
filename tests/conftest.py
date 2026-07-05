@@ -16,6 +16,7 @@ class FakeNetBoxClient:
         self.membership_updates: list[dict] = []
         self.renamed_interfaces: list[tuple[int, str]] = []
         self.deleted_interfaces: list[int] = []
+        self.unassigned_ips: list[int] = []
         self.set_primary_ips: list[tuple[int, int]] = []
 
     def check_connectivity(self) -> str:
@@ -70,6 +71,9 @@ class FakeNetBoxClient:
 
     def get_ip_addresses_for_interface(self, interface_id: int) -> list[dict]:
         return list(self._ips.get(interface_id, []))
+
+    def unassign_ip_from_interface(self, ip_id: int) -> None:
+        self.unassigned_ips.append(ip_id)
 
     def set_primary_ipv4(self, device_id: int, ip_id: int) -> None:
         self.set_primary_ips.append((device_id, ip_id))

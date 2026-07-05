@@ -1,6 +1,7 @@
 import re
 
 from .constants import (
+    INTERFACE_PATTERN_2PART,
     INTERFACE_PATTERN_3PART,
     INTERFACE_PATTERN_4PART,
     NON_PHYSICAL_INTERFACE_TYPES,
@@ -13,7 +14,7 @@ from .reporter import Reporter
 
 def rename_interface(current_name: str, new_position: int) -> str | None:
     """Returns the corrected interface name for the given stack position, or None if no pattern matches."""
-    for pattern in (INTERFACE_PATTERN_4PART, INTERFACE_PATTERN_3PART):
+    for pattern in (INTERFACE_PATTERN_4PART, INTERFACE_PATTERN_3PART, INTERFACE_PATTERN_2PART):
         m = re.match(pattern, current_name)
         if m:
             prefix, _old_num, rest = m.group(1), m.group(2), m.group(3)
@@ -60,13 +61,15 @@ def _process_member(
             client.delete_interface(iface.id)
             continue
 
-        if iface.name == VLAN1_INTERFACE_NAME:
+        if iface.name.lower() == VLAN1_INTERFACE_NAME.lower():
             ips = client.get_ip_addresses_for_interface(iface.id)
             if ips:
                 ip_list = [ip["address"] for ip in ips]
                 warning = f"Deleting Vlan1 on {member.name} which has IPs: {ip_list}"
                 reporter.warn(warning)
                 warnings.append(warning)
+                for ip in ips:
+                    client.unassign_ip_from_interface(ip["id"])
             client.delete_interface(iface.id)
             continue
 

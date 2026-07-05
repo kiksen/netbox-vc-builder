@@ -54,8 +54,12 @@ The master is the only switch that can have a mgmt-only interface. On all member
 The same applies to vlan1 — it is only allowed on the master device.
 The IP of the master's vlan1 interface will be set as the primary IPv4 address.
 
+### Rules for IP addresses when deleting interfaces
 If a vlan1 interface is deleted and it has an IP address assigned, a warning is written to the screen and the log file.
 
+* Don't delete the IP itself, only the interface! 
+* unassign the interface from the IP first, otherwise the IP will be deleted when the interface is deleted
+* check if the IP is the OOB or primary_ip4 address. If it is. Unsassign it!
 
 
 ---
@@ -192,7 +196,7 @@ netbox-vc-builder follows a simple, safe process:
 2. **Load Env** - Loads NETBOX_ENDPOINT and NETBOX_TOKEN from environment variables
 3. **Check NetBox** - Connects to NetBox to verify it is reachable. It reads the NetBox version as a test.
 4. **Site slug** - Checks if the site slug exists in NetBox
-5. **Scan for masters** - Loads all *-1 switches for the site slug that are not already VC members
+5. **Scan for masters** - Loads all *-1 switches for the site slug that are not already VC members. Also display skipped masters
 6. **Check** - Verifies that member candidates are not already VC members elsewhere
 7. **Create or Update VC** - Creates a new VC, or deletes and recreates it when --overwrite is set. Respects check mode.
 8. **Update devicees** - Adds all members to the master. Respects check mode.

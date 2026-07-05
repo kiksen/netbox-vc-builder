@@ -5,6 +5,7 @@ STACK_MAX_POSITION = 8
 
 VC_PRIORITY_BASE = 16
 
+INTERFACE_PATTERN_2PART = r"^([A-Za-z\-]+)(\d+)(\/\d+)$"
 INTERFACE_PATTERN_3PART = r"^([A-Za-z\-]+)(\d+)(\/\d+\/\d+)$"
 INTERFACE_PATTERN_4PART = r"^([A-Za-z\-]+)(\d+)(\/\d+\/\d+\/\d+)$"
 

@@ -144,6 +144,16 @@ class NetBoxClient:
         except Exception as exc:
             raise NetBoxAPIError(f"Failed to rename interface {interface_id}: {exc}") from exc
 
+    def unassign_ip_from_interface(self, ip_id: int) -> None:
+        if self._dry_run:
+            return
+        try:
+            ip = self._nb.ipam.ip_addresses.get(ip_id)
+            if ip:
+                ip.update({"assigned_object_type": None, "assigned_object_id": None})
+        except Exception as exc:
+            raise NetBoxAPIError(f"Failed to unassign IP {ip_id}: {exc}") from exc
+
     def delete_interface(self, interface_id: int) -> None:
         if self._dry_run:
             return

@@ -29,6 +29,8 @@ def make_member(id: int, pos: int) -> StackMember:
         ("GigabitEthernet1/0/1", 2, "GigabitEthernet2/0/1"),
         ("TenGigabitEthernet1/1/1", 3, "TenGigabitEthernet3/1/1"),
         ("TenGigabitEthernet1/1/0/1", 2, "TenGigabitEthernet2/1/0/1"),
+        ("GigabitEthernet1/1", 2, "GigabitEthernet2/1"),
+        ("GigabitEthernet1/1", 3, "GigabitEthernet3/1"),
         ("Vlan1", 2, None),
         ("Loopback0", 2, None),
         ("Port-channel1", 2, None),
@@ -62,6 +64,26 @@ def test_deletes_vlan1_on_member_no_ip():
     client = FakeNetBoxClient(interfaces={2: [iface]})
     process_interfaces(make_master(), [member], client, R)
     assert 102 in client.deleted_interfaces
+
+
+def test_deletes_vlan1_lowercase_on_member():
+    member = make_member(2, 2)
+    iface = make_iface(109, "vlan1")
+    client = FakeNetBoxClient(interfaces={2: [iface]})
+    process_interfaces(make_master(), [member], client, R)
+    assert 109 in client.deleted_interfaces
+
+
+def test_unassigns_ip_before_deleting_vlan1_on_member():
+    member = make_member(2, 2)
+    iface = make_iface(103, "Vlan1")
+    client = FakeNetBoxClient(
+        interfaces={2: [iface]},
+        ips={103: [{"id": 999, "address": "10.0.0.2/24"}]},
+    )
+    process_interfaces(make_master(), [member], client, R)
+    assert 999 in client.unassigned_ips
+    assert 103 in client.deleted_interfaces
 
 
 def test_deletes_vlan1_on_member_with_ip_emits_warning():

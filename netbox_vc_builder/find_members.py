@@ -33,5 +33,5 @@ def find_members(
         )
 
     members.sort(key=lambda m: m.position)
-    reporter.info(f"Found {len(members)} member(s) for {master.name}")
+    reporter.info(f"\nFound {len(members)} member(s) for {master.name}")
     return members
