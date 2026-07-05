@@ -1,0 +1,13 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "netbox-vc-builder --site bonn --overwrite",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "netbox_vc_builder",
+            "args": ["--site", "bonn", "--overwrite"],
+            "justMyCode": true
+        }
+    ]
+}
