@@ -144,6 +144,25 @@ class NetBoxClient:
         except Exception as exc:
             raise NetBoxAPIError(f"Failed to rename interface {interface_id}: {exc}") from exc
 
+    def clear_device_ip_assignments(self, device_id: int, ip_id: int) -> None:
+        if self._dry_run:
+            return
+        try:
+            device = self._nb.dcim.devices.get(device_id)
+            if not device:
+                return
+            patch = {}
+            if device.primary_ip4 and device.primary_ip4.id == ip_id:
+                patch["primary_ip4"] = None
+            if hasattr(device, "oob_ip") and device.oob_ip and device.oob_ip.id == ip_id:
+                patch["oob_ip"] = None
+            if patch:
+                device.update(patch)
+        except Exception as exc:
+            raise NetBoxAPIError(
+                f"Failed to clear device IP assignments for device {device_id}: {exc}"
+            ) from exc
+
     def unassign_ip_from_interface(self, ip_id: int) -> None:
         if self._dry_run:
             return

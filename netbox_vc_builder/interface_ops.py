@@ -58,6 +58,10 @@ def _process_member(
     for iface in interfaces:
         if iface.mgmt_only:
             reporter.warn(f"Deleting mgmt-only interface {iface.name} on {member.name}")
+            ips = client.get_ip_addresses_for_interface(iface.id)
+            for ip in ips:
+                client.clear_device_ip_assignments(member.id, ip["id"])
+                client.unassign_ip_from_interface(ip["id"])
             client.delete_interface(iface.id)
             continue
 
@@ -69,6 +73,7 @@ def _process_member(
                 reporter.warn(warning)
                 warnings.append(warning)
                 for ip in ips:
+                    client.clear_device_ip_assignments(member.id, ip["id"])
                     client.unassign_ip_from_interface(ip["id"])
             client.delete_interface(iface.id)
             continue

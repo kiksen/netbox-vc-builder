@@ -58,6 +58,19 @@ def test_deletes_mgmt_only_interface_on_member():
     assert 101 in client.deleted_interfaces
 
 
+def test_mgmt_only_with_ip_clears_device_assignments_before_delete():
+    member = make_member(2, 2)
+    iface = make_iface(105, "GigabitEthernet0/0", mgmt_only=True)
+    client = FakeNetBoxClient(
+        interfaces={2: [iface]},
+        ips={105: [{"id": 888, "address": "192.168.0.1/24"}]},
+    )
+    process_interfaces(make_master(), [member], client, R)
+    assert (2, 888) in client.cleared_device_ips
+    assert 888 in client.unassigned_ips
+    assert 105 in client.deleted_interfaces
+
+
 def test_deletes_vlan1_on_member_no_ip():
     member = make_member(2, 2)
     iface = make_iface(102, "Vlan1")
@@ -82,6 +95,7 @@ def test_unassigns_ip_before_deleting_vlan1_on_member():
         ips={103: [{"id": 999, "address": "10.0.0.2/24"}]},
     )
     process_interfaces(make_master(), [member], client, R)
+    assert (2, 999) in client.cleared_device_ips
     assert 999 in client.unassigned_ips
     assert 103 in client.deleted_interfaces
 

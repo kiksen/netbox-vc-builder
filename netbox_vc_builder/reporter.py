@@ -96,5 +96,11 @@ class NullReporter(Reporter):
     def section(self, _: str) -> None:
         pass
 
+    def newline(self) -> None:
+        pass
+
+    def list(self, _: str) -> None:
+        pass
+
     def summary(self, _: RunSummary) -> None:
         pass
