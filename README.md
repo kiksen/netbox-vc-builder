@@ -11,13 +11,15 @@ If you create a Cisco stack in NetBox, each stack member (except the first one) 
 The second member has GigabitEthernet1/0/1 as the interface name instead of GigabitEthernet2/0/1.
 
 Each member has a vlan1 interface as a default interface, which results in two or more vlan1 interfaces when you view all chassis interfaces. The same applies to the management interface.
-
+Make sure if you find vlan1 case doesn't matter. 
 
 
 **netbox-vc-builder Solution:**  
 netbox-vc-builder builds clean virtual chassis based on the stack rules described in this document. It offers to scan all switches for one site to build or update the VC members.
 
 ## NetBox Rules
+
+### Switch / Device-name rules
 
 To find out if a switch is a stack member you only need to check its suffix. It ends with `-<number>` starting from 1 to 8, since Cisco supports a maximum of 8 members per stack at the Cisco Catalyst C9000 series.
 
@@ -31,6 +33,7 @@ Each stack member shares the same prefix, e.g. SWITCH. The suffix like -1, -2 ch
 This script is for Cisco devices only. The manufacturer must be set to "cisco".
 
 ### VC Rules
+* The VC always has the name of the master switch e.g. SWITCH-1
 * The first switch is always the stack master.
 * The number -1 or -2 reflects the NetBox VC position.
 * The first switch gets priority 15, the second gets 14, the third gets 13, and so on.
@@ -38,11 +41,13 @@ This script is for Cisco devices only. The manufacturer must be set to "cisco".
 
 ### Interface Renumbering Rules
 
-netbox-vc-builder supports three-part and four-part notation:
+netbox-vc-builder supports two-part, three-part and four-part notation:
+* Stack-Member / Port-Number
 * Stack-Member / Module / Port-Number
 * Stack-Member / Slot-Number / Bay-Number / Port-Number
 
 The stack member number is always mapped to the VC position. All other numbers stay untouched.
+Only physical interfaces are renamed. Interfaces of type virtual, lag or bridge are not touched.
 
 ### Interface Cleanup
 The master is the only switch that can have a mgmt-only interface. On all members this kind of interface will be removed.
@@ -190,7 +195,9 @@ netbox-vc-builder follows a simple, safe process:
 5. **Scan for masters** - Loads all *-1 switches for the site slug that are not already VC members
 6. **Check** - Verifies that member candidates are not already VC members elsewhere
 7. **Create or Update VC** - Creates a new VC, or deletes and recreates it when --overwrite is set. Respects check mode.
-8. **Update** - Adds all members to the master. Respects check mode.
+8. **Update devicees** - Adds all members to the master. Respects check mode.
+9. **Interface number update** -- Interate throuh all interfaces and check if they are two-part, three-part or four-part notation and change the first digit with the switch position.
+10. **Delete interfaces** -- delete vlan1 and mgmt_only interfaces from the members. 
 ---
 
 
