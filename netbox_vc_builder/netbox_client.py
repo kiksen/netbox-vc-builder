@@ -115,9 +115,12 @@ class NetBoxClient:
             return
         try:
             device = self._nb.dcim.devices.get(device_id)
-            device.update(
-                {"virtual_chassis": vc_id, "vc_position": position, "vc_priority": priority}
-            )
+            patch = {"virtual_chassis": vc_id, "vc_position": position, "vc_priority": priority}
+            if device.primary_ip4:
+                patch["primary_ip4"] = None
+            if hasattr(device, "oob_ip") and device.oob_ip:
+                patch["oob_ip"] = None
+            device.update(patch)
             if is_master:
                 vc = self._nb.dcim.virtual_chassis.get(vc_id)
                 vc.update({"master": device_id})
@@ -134,6 +137,17 @@ class NetBoxClient:
                 f"Failed to fetch interfaces for device {device_id}: {exc}"
             ) from exc
         return [self._iface_to_record(i) for i in ifaces]
+
+    def create_interface(self, device_id: int, name: str, interface_type: str) -> int:
+        if self._dry_run:
+            return -1
+        try:
+            iface = self._nb.dcim.interfaces.create(device=device_id, name=name, type=interface_type)
+            return iface.id
+        except Exception as exc:
+            raise NetBoxAPIError(
+                f"Failed to create interface '{name}' on device {device_id}: {exc}"
+            ) from exc
 
     def rename_interface(self, interface_id: int, new_name: str) -> None:
         if self._dry_run:

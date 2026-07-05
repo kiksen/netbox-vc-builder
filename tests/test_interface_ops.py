@@ -126,6 +126,21 @@ def test_renames_physical_interface_on_member():
     assert (200, "GigabitEthernet2/0/1") in client.renamed_interfaces
 
 
+def test_creates_vlan1_on_master_if_missing():
+    master = make_master(id=1)
+    client = FakeNetBoxClient(interfaces={1: []})
+    process_interfaces(master, [], client, R)
+    assert any(i["name"] == "Vlan1" and i["type"] == "virtual" for i in client.created_interfaces)
+
+
+def test_does_not_create_vlan1_if_already_exists():
+    master = make_master(id=1)
+    iface = make_iface(400, "Vlan1", iface_type="virtual")
+    client = FakeNetBoxClient(interfaces={1: [iface]})
+    process_interfaces(master, [], client, R)
+    assert client.created_interfaces == []
+
+
 def test_does_not_rename_master_interfaces():
     master = make_master(id=1)
     iface = make_iface(300, "GigabitEthernet1/0/1")

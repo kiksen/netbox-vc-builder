@@ -3,6 +3,7 @@
 
 Never start deleting duplicate management or SVI interfaces again. Always have the correct interface names.
 
+> 💡 I made this project while working through the [Agentic AI Programming for Python](https://training.talkpython.fm/courses/agentic-ai-programming-for-python) course by Talk Python. Highly recommended!
 
 ## Why netbox-vc-builder
 
@@ -33,9 +34,9 @@ Each stack member shares the same prefix, e.g. SWITCH. The suffix like -1, -2 ch
 This script is for Cisco devices only. The manufacturer must be set to "cisco".
 
 ### VC Rules
-* The VC always has the name of the master switch e.g. SWITCH-1
+* The VC always has the name of the master device, e.g. SWITCH-1 (both names are equal!)
 * The first switch is always the stack master.
-* The number -1 or -2 reflects the NetBox VC position.
+* The suffix number reflects the NetBox VC position.
 * The first switch gets priority 15, the second gets 14, the third gets 13, and so on.
 
 
@@ -53,13 +54,14 @@ Only physical interfaces are renamed. Interfaces of type virtual, lag or bridge 
 The master is the only switch that can have a mgmt-only interface. On all members this kind of interface will be removed.
 The same applies to vlan1 — it is only allowed on the master device.
 The IP of the master's vlan1 interface will be set as the primary IPv4 address.
+If the master doesn't have a vlan1 (type virtual) create it.
 
 ### Rules for IP addresses when deleting interfaces
-If a vlan1 interface is deleted and it has an IP address assigned, a warning is written to the screen and the log file.
+If a vlan1 interface is deleted and it has an IP address assigned, a warning is written to the screen and the log file. Also perform the following actions:
 
+* check if the IP is the out-of-band IP address or primary_ip4 address. If it is. Unassign it from the device first.
+* unassign the IP from the interface first, otherwise the IP will be deleted when the interface is deleted
 * Don't delete the IP itself, only the interface! 
-* unassign the interface from the IP first, otherwise the IP will be deleted when the interface is deleted
-* check if the IP is the OOB or primary_ip4 address. If it is. Unsassign it!
 
 
 ---
@@ -196,11 +198,11 @@ netbox-vc-builder follows a simple, safe process:
 2. **Load Env** - Loads NETBOX_ENDPOINT and NETBOX_TOKEN from environment variables
 3. **Check NetBox** - Connects to NetBox to verify it is reachable. It reads the NetBox version as a test.
 4. **Site slug** - Checks if the site slug exists in NetBox
-5. **Scan for masters** - Loads all *-1 switches for the site slug that are not already VC members. Also display skipped masters
+5. **Scan for masters** - Loads all *-1 switches for the site slug. Skipped masters (already in a VC) are displayed separately.
 6. **Check** - Verifies that member candidates are not already VC members elsewhere
 7. **Create or Update VC** - Creates a new VC, or deletes and recreates it when --overwrite is set. Respects check mode.
-8. **Update devicees** - Adds all members to the master. Respects check mode.
-9. **Interface number update** -- Interate throuh all interfaces and check if they are two-part, three-part or four-part notation and change the first digit with the switch position.
+8. **Update devices** - Adds all members to the master. Respects check mode.
+9. **Interface number update** -- Iterate through all interfaces and check if they are two-part, three-part or four-part notation and change the first digit with the switch position.
 10. **Delete interfaces** -- delete vlan1 and mgmt_only interfaces from the members. 
 ---
 

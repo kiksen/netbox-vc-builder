@@ -41,14 +41,19 @@ def _process_master(
     master: StackMaster, client: NetBoxClient, reporter: Reporter, warnings: list[str]
 ) -> None:
     interfaces = client.get_interfaces(master.id)
+    vlan1_found = False
     for iface in interfaces:
         if iface.name.lower() == VLAN1_INTERFACE_NAME.lower():
+            vlan1_found = True
             ips = client.get_ip_addresses_for_interface(iface.id)
             if ips:
                 primary_ip = ips[0]
                 client.set_primary_ipv4(master.id, primary_ip["id"])
                 reporter.info(f"Set primary IPv4 {primary_ip['address']} on {master.name}")
             break
+    if not vlan1_found:
+        reporter.info(f"Creating Vlan1 on {master.name}")
+        client.create_interface(master.id, VLAN1_INTERFACE_NAME, "virtual")
 
 
 def _process_member(
