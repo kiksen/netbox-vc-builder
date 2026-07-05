@@ -116,6 +116,9 @@ class NetBoxClient:
         try:
             device = self._nb.dcim.devices.get(device_id)
             patch = {"virtual_chassis": vc_id, "vc_position": position, "vc_priority": priority}
+            # NetBox validates all device fields on every PATCH. If primary_ip4 or oob_ip
+            # reference an IP not assigned to this device (e.g. after VC deletion), the PATCH
+            # returns HTTP 400. Clear them atomically in the same request.
             if device.primary_ip4:
                 patch["primary_ip4"] = None
             if hasattr(device, "oob_ip") and device.oob_ip:
@@ -165,6 +168,8 @@ class NetBoxClient:
             device = self._nb.dcim.devices.get(device_id)
             if not device:
                 return
+            # NetBox rejects any device PATCH if primary_ip4/oob_ip reference an IP
+            # that is not assigned to the device. Clear them before interface operations.
             patch = {}
             if device.primary_ip4 and device.primary_ip4.id == ip_id:
                 patch["primary_ip4"] = None
@@ -183,6 +188,8 @@ class NetBoxClient:
         try:
             ip = self._nb.ipam.ip_addresses.get(ip_id)
             if ip:
+                # Unassigning the IP before deleting the interface prevents NetBox from
+                # cascading the interface deletion to the IP object.
                 ip.update({"assigned_object_type": None, "assigned_object_id": None})
         except Exception as exc:
             raise NetBoxAPIError(f"Failed to unassign IP {ip_id}: {exc}") from exc
