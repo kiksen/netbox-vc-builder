@@ -22,7 +22,7 @@ def build_vc(
         reporter.warn(f"Deleting existing VC for {master.name}")
         client.delete_virtual_chassis(master.existing_vc_id)
 
-    vc_name = master.prefix
+    vc_name = master.name
     reporter.info("creating VC.")
     vc_id = client.create_virtual_chassis(vc_name)
 

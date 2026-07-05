@@ -117,7 +117,7 @@ class NetBoxClient:
             device = self._nb.dcim.devices.get(device_id)
             patch = {"virtual_chassis": vc_id, "vc_position": position, "vc_priority": priority}
             # NetBox validates all device fields on every PATCH. If primary_ip4 or oob_ip
-            # reference an IP not assigned to this device (e.g. after VC deletion), the PATCH
+            # reference an IP not assigned any interface of this device (e.g. after VC deletion), the PATCH
             # returns HTTP 400. Clear them atomically in the same request.
             if device.primary_ip4:
                 patch["primary_ip4"] = None

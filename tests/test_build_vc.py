@@ -26,7 +26,7 @@ def make_member(id: int, pos: int) -> StackMember:
 def test_creates_vc_with_correct_name():
     client = FakeNetBoxClient()
     build_vc(make_master(), [], client, R)
-    assert client.created_vcs == ["SWITCH"]
+    assert client.created_vcs == ["SWITCH-1"]
 
 
 def test_sets_master_position_and_priority():
@@ -67,7 +67,7 @@ def test_deletes_and_recreates_when_overwrite():
     result = build_vc(make_master(existing_vc_id=99), [], client, R, overwrite=True)
     assert 99 in client.deleted_vcs
     assert result.status == "created"
-    assert client.created_vcs == ["SWITCH"]
+    assert client.created_vcs == ["SWITCH-1"]
 
 
 def test_returns_correct_member_count():
